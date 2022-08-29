@@ -2,6 +2,8 @@
 
 class EU4EncodingConverter
 {
+    public const CMD_SPACE_PARAM = '-space';
+
     protected const LOW_BYTE_OFFSET = 14;
     protected const HIGH_BYTE_OFFSET = -9;
 
@@ -46,7 +48,7 @@ class EU4EncodingConverter
         return strtoupper($this->result);
     }
 
-    protected function build(string $char, bool $whitespace = false)
+    protected function build(string $char, bool $whitespace = false): string
     {
         $separator = $whitespace ? ' ' : '';
 
@@ -83,10 +85,16 @@ class EU4EncodingConverter
                 break;
         }
 
-        return implode($separator, [dechex($escapeChr), dechex($low), dechex($high)]);
+        $hexCodes = [
+            $this->padHex(dechex($escapeChr)),
+            $this->padHex(dechex($low)),
+            $this->padHex(dechex($high)),
+        ];
+
+        return implode($separator, $hexCodes);
     }
 
-    protected function cp1252ToUtf8($char)
+    protected function cp1252ToUtf8(int $char): int
     {
         $escapeList = [
             0x80 => 0x20AC, 0x82 => 0x201A, 0x83 => 0x0192, 0x84 => 0x201E,
@@ -98,5 +106,10 @@ class EU4EncodingConverter
             0x9C => 0x0153, 0x9E => 0x017E, 0x9F => 0x0178
         ];
         return $escapeList[$char] ?? $char;
+    }
+
+    protected function padHex(string $hex): string
+    {
+        return str_pad($hex, 2, '0', STR_PAD_LEFT);
     }
 }

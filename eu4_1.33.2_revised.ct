@@ -1,0 +1,2991 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="42">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>558</ID>
+      <Description>"[X] &lt;== Europa Universalis IV x64 v1.33.2.0 Steam Script 10.2 AOB"</Description>
+      <Options moHideChildren="1" moDeactivateChildrenAsWell="1"/>
+      <Color>FF0000</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{
+===========================================
+ Game Title    : Europa Universalis IV (64Bits)
+ Game Version  : 1.33.2.0 (108e) (X64)
+ Game Sponsor  : Vodos (game) + darkedone02 (DLC) + PF (DLCs)
+ Process Name  : eu4.exe
+ Relevant Info : 64bits/TBS
+ Script Version: 10.2 (x64)
+ CE Version    : 7.4
+ Release date  : 02-Mar-2022
+ Author        : Recifense
+ Revise date   : 29-Aug-2022
+ Revisor       : Wujidadi
+ History:
+ 21-Sep-2019: First Release for 64bits version 1.29.1.0.
+ 09-Dec-2019: Release for version 1.29.3.0.+ New feature
+ 10-Jun-2020: Release for version 1.30.1.0 (Emperor)
+ 11-Jun-2020: Fix for Army/Navy tradition (S9.3)
+ 12-Jun-2020: Fix for changing Religion/Culture (S9.4)
+ 16-Feb-2021: Release for version 1.30.5.0 (S9.5)
+ 27-Apr-2021: Release for version 1.31.0.0 (S9.6)
+ 28-Apr-2021: Release for version 1.31.1.0 (S9.7)
+ 03-May-2021: Release for version 1.31.2.0 (S9.8)
+ 10-Jul-2021: Release for version 1.31.5.2 (S9.9)
+ 07-Sep-2021: New feature: Minimum Nation Design Points (S10.0)
+ 11-Nov-2021: Release for version 1.33.0.0 (S10.1)
+ 02-Mar-2022: Release for version 1.33.2.0 (S10.2)
+ 29-Aug-2022: Tiny revise for names from String to Array of byte
+ Features:
+ - Minimum Ducats
+ - Full Manpower
+ - Minimum Stability
+ - Minimum Prestige
+ - Minimum Power:
+   - Administrative
+   - Diplomatic
+   - Military
+ - Minimum Army/Navy Tradition
+ - Minimum Mercantilism
+ - Minimum Legitimacy
+ - Move Army/Navy to adjacent area in 1 turn
+ - Tasks in 1 turn:
+   - Recruitment
+   - Production
+   - Construction
+   - Culture
+   - Make Core
+ - Colonization in 1 turn
+ - Blessed Province:
+   - Minimum Trade Power
+   - Minimum ManPower Bonus
+ - Quick Province Ownership
+ - God Mode:
+   - Army
+   - Fleet
+   - Garrison (Province)
+   - Attrition
+ - No Native
+ - Full Garrison
+ - Change Religion
+ - Change Culture
+ - No Decay
+ - Quick Exploration
+ - Religion Conversion in 1 Day (new)(s9.1)
+ - Minimum Nation Design Points (new)(s10.0)
+ - pointers
+===========================================
+}
+
+//=========================================
+// Checking CE version
+{$lua}
+  if(getCEVersion() &lt; 7.0) then
+    ShowMessage('Sorry. CE version should be 7.0 or above')
+  end
+{$asm}
+
+//=========================================
+// Checking Selected Process
+{$lua}
+  if(process == nil) then
+    ShowMessage('No process was selected')
+  elseif (string.upper(process) ~= string.upper("eu4.exe")) then
+    ShowMessage('Warning. Expected Process = eu4.exe')
+  end
+{$asm}
+
+//=========================================
+{$lua}
+--  monoAA_USEMONO(process,false)
+  if waitForPDB then --this way older CE versions are unaffected (By Dark Byte)
+    waitForPDB()
+  end
+{$asm}
+
+//=========================================
+// Definitions
+define(LUDO,"eu4.exe")
+{
+//define(MHPR,eu4.exe+006DFB20) //=#=#=== (for AOB =&gt; -1)
+//define(MPRS,eu4.exe+01207D6F) //=#=##=#
+//define(MSPE,eu4.exe+0115A294) //=#=#=#=
+//define(MSAY,eu4.exe+01231388) //===#===#
+
+//define(MAMP,eu4.exe+00BF3877) //=##====#
+//define(MRPC,eu4.exe+00249244) //=======
+//define(MCPS,eu4.exe+009413E6) //=#===#=
+//define(MPGN,eu4.exe+01159939) //=#=#=#=
+//define(MOCD,eu4.exe+000F8850) //=======
+
+//define(GMD1,eu4.exe+002232F9) //=======#
+//define(GMD3,eu4.exe+009F00EE) //===#===
+//define(GMD4,eu4.exe+0093F9A5) //=#===##
+//define(GMD5,eu4.exe+009F04DC) //=======
+
+//define(MOEN,eu4.exe+00872BE2) //=#=====
+//define(MEN2,eu4.exe+00872A48) //=#=====
+
+//define(MORC,eu4.exe+0024DDB0) //N#=#=#=
+//define(MONP,eu4.exe+00426F38) //-----N= (s10.0) HP = this + 0A 3 1
+}
+
+//=========================================
+// Constants used in the script (that can be changed)
+define(ctCE70,(float)7.0)
+define(ctMMON,#70000)  // Minimum Money
+define(ctMATT,#10)     // Minimum Attributes
+
+//=========================================
+[ENABLE]
+//=========================================
+//LuaCall(CheckVersion())
+//=========================================
+// Check if script is compatible to this game version
+// If false the script will not be loaded
+
+AOBScanModule(MHPR,$process,CC 80 B9 5E 1E 00 00 07 75 ?? 80 B9 67 1E 00 00 00 74 ?? 48 8B 81 60 1E 00)
+AOBScanModule(MPRS,$process,4D 8D BE 60 02 00 00 41 8B 1F 85 DB 7E ?? 8B D7 49 8B CE E8 ?? ?? ?? ?? 3B)
+AOBScanModule(MSPE,$process,8B 80 88 08 00 00 3B 81 64 14 00 00 0F 94 C2 4C 8D 35 ?? ?? ?? ?? 45 33 ED)
+AOBScanModule(MSAY,$process,48 8B 48 38 48 2B 48 30 48 C1 F9 03 3B CA 0F 95 C3 45 8B F4 4C 8B 44 24 58 49 83 F8 10) //.
+
+AOBScanModule(MAMP,$process,41 39 BE 30 01 00 00 0F 9D C0 84 C0 0F 84 ?? ?? ?? ?? 8B 85 80 03 00 00 41) //.
+AOBScanModule(MRPC,$process,44 69 59 28 E8 03 00 00 48 8B E9 48 83 C1 20 48 8B F2 E8 ?? ?? ?? ?? 48 8B)
+AOBScanModule(MCPS,$process,81 B9 F0 03 00 00 E7 03 00 00 0F 9D C0 84 C0 75 ?? 4D 85 C0 74 ?? 48 8D 15)
+AOBScanModule(MPGN,$process,8B 80 F8 03 00 00 39 87 B0 14 00 00 0F 94 C1 80 F1 01 75 ?? 38 8F 00 15 00)
+AOBScanModule(MOCD,$process,44 8B 01 41 B9 01 00 00 00 41 81 E8 C0 55 9C 02 ?? ?? 41 8B C8 B8 AB AA AA)
+
+AOBScanModule(GMD1,$process,8B 43 34 29 43 28 8B 43 2C 39 43 38 7E ?? 89 43 38 8B 43 38 29 43 2C 48 8B) //.
+AOBScanModule(GMD3,$process,8B 06 29 47 28 48 8B 47 20 8B 40 58 8B 4F 28 33 D2 85 C9 79 ?? 89 57 28 EB)
+AOBScanModule(GMD4,$process,8B 03 48 8B 5C 24 38 89 87 F8 03 00 00 48 83 C4 20 5F C3 CC CC ?? ?? ?? ??)
+AOBScanModule(GMD5,$process,89 47 2C 48 8B 5C 24 60 48 8B 74 24 68 48 83 C4 40 5F C3 ?? ?? ?? ?? ?? ??)
+
+AOBScanModule(MOEN,$process,41 81 7F 2C A0 86 01 00 0F 9C C0 84 C0 ?? ?? 8B 05 ?? ?? ?? ?? B9 E8 03 00)
+AOBScanModule(MEN2,$process,81 7E 2C A0 86 01 00 ?? ?? 8B 05 ?? ?? ?? ?? B9 E8 03 00 00 3B C1 0F 4C C1)
+
+AOBScanModule(MORC,$process,41 01 80 8C 08 00 00 E9 ?? ?? ?? ?? 49 8B 80 68 04 00 00 48 C1 E8 20 0F BF)
+
+AOBScanModule(MONP,$process,69 05 ?? ?? ?? ?? E8 03 00 00 48 63 D0 48 63 C1 48 0F AF D0 48 B8 CF F7)
+
+//=========================================
+alloc(MyCode,4096,$process)
+//=========================================
+// Declaration section
+label(_MonHumanPlayer)
+label(_BackMHP)
+label(_MonPlayerResources)
+label(_BackMPR)
+label(_MonSelProvince)
+label(_BackMSP)
+label(_MonSelArmy)
+label(_BackMSA)
+label(_MonArmyMP)
+label(_BackMAM)
+label(_MonRecProdConst)
+label(_BackMRP)
+label(_MonColonizationProg)
+label(_BackMCP)
+label(_MonProvinceGarrison)
+label(_BackMPG)
+label(_MonCurDate)
+label(_BackMCD)
+
+label(_GodMode1)
+label(_BackGM1)
+label(_GodMode3)
+label(_BackGM3)
+label(_GodMode4)
+label(_BackGM4)
+label(_GodMode5)
+label(_BackGM5)
+
+label(_MonExploration)
+label(_BackMEN)
+label(_MonExploration2)
+label(_BackME2)
+
+label(_MonRelConv)
+label(_BackMRC)
+
+label(iEnableMMD)
+label(iEnableFMP)
+label(iEnableMMP)
+label(iEnableMRP)
+label(iEnableANM)
+label(iEnableANT)
+label(iEnableMER)
+label(iEnableLEG)
+label(iEnableMRR)
+label(iEnableMAM)
+label(iEnableRPC)
+label(iEnableMCP)
+label(iEnableBSP)
+label(iEnableQOS)
+label(iEnableGMD)
+label(iEnableNNE)
+label(iEnableMPG)
+label(iEnableCHR)
+label(iEnableCHC)
+label(iEnableMMS)
+label(iEnableMPD)
+label(iEnableQEN)
+label(iEnableMRC)
+label(iEnableMNP)
+
+label(iPlayerID)
+label(iMaxPower)
+label(iCurDate)
+label(iAge)
+label(iBornDate)
+label(iMinNP)
+
+label(pPlayer)
+label(pProvince)
+label(pArmy)
+label(pReligion)
+label(pCulture)
+label(pGame)
+
+label(pMHPR)
+label(pMONP)
+
+//=========================================
+// Registering Symbols
+registersymbol(MyCode)
+registersymbol(iEnableMMD)
+registersymbol(iEnableFMP)
+registersymbol(iEnableMMP)
+registersymbol(iEnableMRP)
+registersymbol(iEnableANM)
+registersymbol(iEnableANT)
+registersymbol(iEnableMER)
+registersymbol(iEnableLEG)
+registersymbol(iEnableMRR)
+registersymbol(iEnableMAM)
+registersymbol(iEnableRPC)
+registersymbol(iEnableMCP)
+registersymbol(iEnableBSP)
+registersymbol(iEnableQOS)
+registersymbol(iEnableGMD)
+registersymbol(iEnableNNE)
+registersymbol(iEnableMPG)
+registersymbol(iEnableCHR)
+registersymbol(iEnableCHC)
+registersymbol(iEnableMMS)
+registersymbol(iEnableMPD)
+registersymbol(iEnableQEN)
+registersymbol(iEnableMRC)
+registersymbol(iEnableMNP)
+
+registersymbol(iPlayerID)
+registersymbol(iCurDate)
+registersymbol(iAge)
+registersymbol(iBornDate)
+registersymbol(iMinNP)
+
+registersymbol(pPlayer)
+registersymbol(pProvince)
+registersymbol(pArmy)
+registersymbol(pReligion)
+registersymbol(pCulture)
+registersymbol(pGame)
+
+registersymbol(pMHPR)
+registersymbol(MPRS)
+registersymbol(MSPE)
+registersymbol(MSAY)
+
+registersymbol(MAMP)
+registersymbol(MRPC)
+registersymbol(MCPS)
+registersymbol(MPGN)
+registersymbol(MOCD)
+
+//registersymbol(GMD1)
+registersymbol(GMD3)
+registersymbol(GMD4)
+registersymbol(GMD5)
+
+registersymbol(MOEN)
+registersymbol(MEN2)
+
+registersymbol(MORC)
+
+registersymbol(pMONP)
+
+//=========================================
+MyCode:
+//========================================= 1.31.0.0 *
+// This code finds out Player ID
+// RAX is safe
+_MonHumanPlayer:
+ mov [pGame],rcx
+
+ mov eax,[rcx+00001E5C]       // Get player ID
+
+ mov [iPlayerID],eax          // Save it for further use
+
+_ExitMHP:
+ cmp byte ptr [rcx+00001E5E],07 // Original code
+ jmp _BackMHP                 // Back to main code
+
+//========================================= 1.32.0.0 *
+// main game strategic view
+_MonPlayerResources:
+ push rax
+ push rbx
+ push rcx
+ push rdx
+ push rsi
+ push rdi
+
+ mov rcx,r14
+
+ mov eax,[rcx+24]
+ cmp eax,[iPlayerID]
+ jne _ExitMPR
+
+ mov [pPlayer],rcx
+
+ mov rax,[rcx+00000EF8]
+ mov [pReligion],rax
+ mov rax,[rcx+000011D0]
+ mov [pCulture],rax
+
+// Ducats
+ cmp dword ptr [iEnableMMD],0
+ je _MonPR00                  // Jump if feature is disabled
+
+ mov eax,#70000000            // minimum ducat (70000)
+
+ cmp eax,[rcx+00000B78]
+ jle _MonPR00
+
+ mov [rcx+00000B78],eax
+
+// Manpower/Sailors
+_MonPR00:
+ cmp dword ptr [iEnableFMP],0
+ je _MonPR10                  // Jump if feature is disabled
+
+ mov eax,[rcx+00000D80]
+ mov ebx,[rcx+00000D84]
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00000D80],ebx
+
+ mov eax,[rcx+00000D88]
+ mov ebx,[rcx+00000D8C]
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00000D88],ebx
+
+// Stability
+_MonPR10:
+ cmp dword ptr [iEnableMMS],0
+ je _MonPR01                  // Jump if feature is disabled
+
+ mov eax,#3670
+ cmp eax,[rcx+00000BA0]
+ js _MonPR01
+
+ mov [rcx+00000BA0],eax
+
+// Prestige
+_MonPR01:
+ cmp dword ptr [iEnableMMP],0
+ je _MonPR02                  // Jump if feature is disabled
+
+ mov eax,#90000               // Minimum Prestige (90)
+ cmp eax,[rcx+00000CC0]
+ js _MonPR02
+
+ mov [rcx+00000CC0],eax
+
+// Research Powers
+_MonPR02:
+ cmp dword ptr [iEnableMRP],0
+ je _MonPR03                  // Jump if feature is disabled
+
+ mov eax,[iMaxPower]          // Minimum RP
+
+ dec eax
+ dec eax
+ dec eax
+ dec eax
+
+ mov ebx,[rcx+00000260]       // Administrative Power
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00000260],ebx
+
+ mov ebx,[rcx+00000264]       // Diplomatic Power
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00000264],ebx
+
+ mov ebx,[rcx+00000268]       // Military Power
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00000268],ebx
+
+// Tradition
+_MonPR03:
+_MonPR04:
+ cmp dword ptr [iEnableANT],0
+ je _MonPR05                  // Jump if feature is disabled
+
+ mov eax,#70000               // Minimum Tradition
+
+ mov ebx,[ecx+00000E04]       // Army
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [ecx+00000E04],ebx
+
+ mov ebx,[ecx+00000E08]       // Naval
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [ecx+00000E08],ebx
+
+// Mercantilism
+_MonPR05:
+ cmp dword ptr [iEnableMER],0
+ je _MonPR06                  // Jump if feature is disabled
+
+ mov eax,#37000               // Minimum Mercantilism (37)
+
+ mov ebx,[rcx+00001060]
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00001060],ebx
+
+// Legitimacy
+_MonPR06:
+ cmp dword ptr [iEnableLEG],0
+ je _MonPR07                  // Jump if feature is disabled
+
+ mov eax,#90000               // Minimum Legitimacy (90)
+
+ mov ebx,[rcx+00001058]
+ test ebx,ebx
+ jz _MonPR07
+
+ cmp ebx,eax
+ cmovs ebx,eax
+ mov [rcx+00001058],ebx
+
+// Decay
+_MonPR07:
+_MonPR08:
+ cmp dword ptr [iEnableMPD],0
+ je _MonPR09                  // Jump if feature is disabled
+
+ mov rbx,[rcx+000026B8]       // General Status
+ test rbx,rbx
+ jz _MonPR09
+
+ lea rbx,[rcx+000026B8]
+ xor rsi,rsi
+
+// Yearly Army Tradition Decay
+ mov eax,#82
+ call _FindStatusAddress
+ test rdi,rdi
+ jz _MonPR09
+
+ mov [rdi+04],esi
+
+// Yearly Navy Tradition Decay
+ mov eax,#83
+ call _FindStatusAddress
+ test rdi,rdi
+ jz _MonPR09
+
+ mov [rdi+04],esi
+
+// Prestige Decay
+ mov eax,#103
+ call _FindStatusAddress
+ test rdi,rdi
+ jz _MonPR09
+
+ mov [rdi+04],esi
+
+_MonPR09:
+_ExitMPR:
+ pop rdi
+ pop rsi
+ pop rdx
+ pop rcx
+ pop rbx
+ pop rax
+
+ lea r15,[r14+00000260]       // Original code (Get iAP)
+ jmp _BackMPR
+
+//========================================= 1.31.2.0 *
+// Selected Province
+_MonSelProvince:
+ push rbx
+ push rcx
+ push rsi
+ push rdi
+
+ cmp rax,[pProvince]
+ je _MonSP0Z
+
+ mov rbx,[pProvince]
+ mov [pProvince],rax
+ mov [pProvince+08],rbx
+
+_MonSP0Z:
+ cmp dword ptr [iEnableQOS],0
+ je _MonSP0Q                  // Jump if feature is disabled
+
+ mov ebx,[rax+0000046C]       // Conquerer iID (2)
+ cmp ebx,[iPlayerID]
+ jne _MonSP0Q
+
+ mov rcx,[rax+00000488]       // pointer to 1st claimer
+ test rcx,rcx
+ jz _MonSP0Q
+
+ cmp rcx,[rax+00000490]
+ je _MonSP0Q
+
+ mov ebx,[rax+00000468]       // Conquerer aID
+ mov [rax+00000460],ebx       // (1)
+ mov [rcx],ebx
+ mov ebx,[rax+0000046C]       // Conquerer iID (2)
+ mov [rax+00000464],ebx       // (1)
+ mov [rcx+04],ebx
+
+_MonSP0Q:
+ mov ebx,[rax+00000464]
+ cmp ebx,[iPlayerID]
+ jne _ExitMSP
+
+ cmp dword ptr [iEnableBSP],0
+ je _MonSP00                  // Jump if feature is disabled
+
+//Trade Power
+ mov ecx,#70000
+
+ mov ebx,[rax+00000888]
+ cmp ebx,ecx
+ cmovs ebx,ecx
+ mov [rax+00000888],ebx
+
+//Manpower Bonus
+ mov ecx,#7000
+
+ mov ebx,[rax+000003D8]
+ cmp ebx,ecx
+ cmovs ebx,ecx
+ mov [rax+000003D8],ebx
+
+//Base Tax Value
+ mov ebx,[rax+000003DC]
+ cmp ebx,ecx
+ cmovs ebx,ecx
+ mov [rax+000003DC],ebx
+
+//Base Production
+ mov ebx,[rax+000003E0]
+ cmp ebx,ecx
+ cmovs ebx,ecx
+ mov [rax+000003E0],ebx
+
+// Change Religion
+_MonSP00:
+ cmp dword ptr [iEnableCHR],0
+ je _MonSP11                  // Jump if feature is disabled
+
+ mov rbx,[pReligion]
+ test rbx,rbx
+ jz _MonSP11
+
+ mov [rax+00000440],rbx
+ mov [rax+00000448],rbx
+
+// Change Culture
+_MonSP11:
+ cmp dword ptr [iEnableCHC],0
+ je _MonSP01                  // Jump if feature is disabled
+
+ mov rbx,[pCulture]
+ test rbx,rbx
+ jz _MonSP01
+
+ mov [rax+00000428],rbx
+ mov [rax+00000430],rbx
+ mov [rax+00000438],rbx
+
+// No Natives
+_MonSP01:
+ cmp dword ptr [iEnableNNE],0
+ je _MonSP02                  // Jump if feature is disabled
+
+ xor ebx,ebx
+ mov [rax+00000588],ebx
+ mov [rax+0000058c],ebx
+ mov [rax+00000590],ebx
+
+//Quick Onwership
+_MonSP02:
+ cmp dword ptr [iEnableQOS],0
+ je _MonSP03                  // Jump if feature is disabled
+
+ mov rcx,[rax+00000488]       // pointer to 1st claimer
+ test rcx,rcx
+ jz _MonSP03
+
+ mov ebx,[rax+00000460]
+ mov [rax+00000468],ebx
+ mov ebx,[rax+00000464]
+ mov [rax+0000046C],ebx
+
+_MonSP03:
+_ExitMSP:
+ pop rdi
+ pop rsi
+ pop rcx
+ pop rbx
+
+ mov eax,[rax+00000888]       // Original code (trade power)
+ jmp _BackMSP                 // Back to main code
+
+//========================================= 1.32.2.0 #
+// Selected Army
+_MonSelArmy:
+ mov [pArmy],rax
+
+_ExitMSA:
+ mov rcx,[rax+38]             // Original code
+ sub rcx,[rax+30]             // Original code
+ jmp _BackMSA                 // Back to main code
+
+//========================================= 1.32.2.0 #
+// During Turn
+// RAX is safe
+_MonArmyMP:
+ cmp dword ptr [iEnableMAM],0
+ je _ExitMAM                  // Jump if feature is disabled
+
+ mov eax,[r14+000000D4]
+ cmp eax,[iPlayerID]
+ jne _ExitMAM
+
+ cmp [r14+00000130],edi
+ jns _ExitMAM
+
+ mov [r14+00000130],edi
+
+_ExitMAM:
+ cmp [r14+00000130],edi       // Original code
+ jmp _BackMAM                 // Back to main code
+
+//========================================= ok
+// During Turn (recruitment/Production/Construction)
+// RSI is safe
+_MonRecProdConst:
+ cmp dword ptr [iEnableRPC],0
+ je _ExitMRP                  // Jump if feature is disabled
+
+ mov esi,[rcx+44]
+ cmp esi,[iPlayerID]
+ jne _ExitMRP
+
+ mov dword ptr [rcx+28],00
+
+_ExitMRP:
+ imul r11d,[rcx+28],000003E8  // Original code (rds #days)
+ jmp _BackMRP                 // Back to main code
+
+//========================================= 1.31.2.0 *
+// During Turn
+// RAX is safe
+_MonColonizationProg:
+ cmp dword ptr [iEnableMCP],0
+ je _ExitMCP                  // Jump if feature is disabled
+
+ mov eax,[rcx+00000464]
+ cmp eax,[iPlayerID]
+ jne _ExitMCP
+
+ mov eax,#1000000
+ cmp eax,[rcx+000003F0]
+ js _ExitMCP
+
+ mov [rcx+000003F0],eax
+
+_ExitMCP:
+ cmp [rcx+000003F0],000003E7  // Original code (settlers)
+ jmp _BackMCP                 // Back to main code
+
+//========================================= 1.32.0.0 #
+// Selected Province
+// RCX is safe
+_MonProvinceGarrison:
+ cmp dword ptr [iEnableMPG],0
+ je _ExitMPG                  // Jump if feature is disabled
+
+ mov ecx,[rax+00000424]
+ cmp ecx,[iPlayerID]
+ jne _ExitMPG
+
+ mov rcx,[rax+000009E8]
+ test rcx,rcx
+ jz _ExitMPG
+
+ mov ecx,[rcx+00000304]
+
+ imul ecx,ecx,000003E8
+ mov [rax+000003F8],ecx
+
+_ExitMPG:
+ mov eax,[rax+000003F8]       // Original code (get Garrison)
+ jmp _BackMPG                 // Back to main code
+
+//========================================= ok
+// At main game screen
+_MonCurDate:
+ mov r8d,[rcx]
+ mov [iCurDate],r8d
+
+ mov r9d,00002238
+ imul r9d,[iAge]
+ sub r8d,r9d
+ mov [iBornDate],r8d
+
+_ExitMCD:
+ mov r8d,[rcx]                // Original code (get Date)
+ mov r9d,00000001             // Original code
+ jmp _BackMCD                 // Back to main code
+
+//========================================= 1.32.2.0 *
+// During Battle
+_GodMode1:
+ cmp dword ptr [iEnableGMD],0
+ je _ExitGM1                  // Jump if feature is disabled
+
+ mov eax,[rbx+54]
+ cmp eax,[iPlayerID]
+ jne _ExitGM1
+
+ mov eax,#1000
+ mov [rbx+28],eax
+
+ xor eax,eax
+ mov [rbx+38],eax
+ mov [rbx+34],eax
+
+ cmp dword ptr [iEnableANM],0
+ je _ExitGM1                  // Jump if feature is disabled
+
+ mov eax,#70000
+ mov [rbx+2c],eax
+
+_ExitGM1:
+ mov eax,[rbx+34]             // Original code
+ sub [rbx+28],eax             // Original code
+ jmp _BackGM1                 // Back to main code
+
+//========================================= 1.31.0.0 #
+// During Assault (attacker)
+_GodMode3:
+ cmp dword ptr [iEnableGMD],0
+ je _ExitGM3                  // Jump if feature is disabled
+
+ mov eax,[rdi+54]
+ cmp eax,[iPlayerID]
+ jne _ExitGM3
+
+ xor eax,eax
+ mov [rdi+38],eax
+ mov [rdi+34],eax
+ mov [rsi],eax
+
+ mov eax,#1000
+ mov [rdi+28],eax
+
+ mov eax,#70000
+
+ cmp [rdi+2c],eax
+ jns _ExitGM3
+
+ mov [rdi+2c],eax
+
+_ExitGM3:
+ mov eax,[rsi]                // Original code
+ sub [rdi+28],eax             // Original code (upd str)
+ jmp _BackGM3                 // Back to main code
+
+//========================================= 1.31.2.0 #
+// During Assault (defender) Province
+_GodMode4:
+ cmp dword ptr [iEnableGMD],0
+ je _ExitGM4                  // Jump if feature is disabled
+
+ mov eax,[rdi+00000464]
+ cmp eax,[iPlayerID]
+ jne _ExitGM4
+
+ mov eax,[rdi+000003F8]
+
+ cmp [rbx],eax
+ jns _ExitGM4
+
+ mov [rbx],eax
+
+_ExitGM4:
+ mov eax,[rbx]                // Original code
+ mov rbx,[rsp+38]             // Original code
+ jmp _BackGM4                 // Back to main code
+
+//========================================= ok
+// During Assault (attacker)
+_GodMode5:
+ cmp dword ptr [iEnableGMD],0
+ je _ExitGM5                  // Jump if feature is disabled
+
+ mov ebx,[rdi+54]
+ cmp ebx,[iPlayerID]
+ jne _ExitGM5
+
+ xor ebx,ebx
+ mov [rdi+38],ebx
+ mov [rdi+34],ebx
+
+ mov eax,#70000
+
+_ExitGM5:
+ mov [rdi+2C],eax             // Original code
+ mov rbx,[rsp+60]             // Original code
+ jmp _BackGM5                 // Back to main code
+
+//========================================= 1.30.1.0 #
+// During Turn (coast)
+// EAX is safe
+_MonExploration:
+ cmp dword ptr [iEnableQEN],0
+ je _ExitMEN                  // Jump if feature is disabled
+
+ mov eax,[rsi+000000D4]
+ cmp eax,[iPlayerID]
+ jne _ExitMEN
+
+ mov dword ptr [r15+2C],000186A0
+
+_ExitMEN:
+ cmp dword ptr [r15+2C],000186A0 // Original code
+ jmp _BackMEN                 // Back to main code
+
+//========================================= 1.30.1.0 #
+// During Turn
+// RAX is safe
+_MonExploration2:
+ cmp dword ptr [iEnableQEN],0
+ je _ExitME2                  // Jump if feature is disabled
+
+ mov eax,[rbx+000000D4]
+ cmp eax,[iPlayerID]
+ jne _ExitME2
+
+ mov dword ptr [rsi+2C],000186A0
+
+_ExitME2:
+ cmp dword ptr [rsi+2C],000186A0 // Original code
+ jmp _BackME2                 // Back to main code
+
+//========================================= 1.31.2.0 * (new S9.1)
+// During Turn  (when updating religion conversion progress)
+_MonRelConv:
+ cmp dword ptr [iEnableMRC],0
+ je _ExitMRC                  // Jump if feature is disabled
+
+ cmp rdi,[pPlayer]
+ jne _ExitMRC
+
+ mov eax,#100001
+
+_ExitMRC:
+ add [r8+0000088C],eax        // Original code (upd prog)
+ jmp _BackMRC                 // Back to main code
+
+//========================================= New s10.0
+// When creating a nation (Minimum Nation Points)
+_MonNationPoints:
+ cmp dword ptr [iEnableMNP],0
+ je _ExitMNP                  // Jump if feature is disabled
+
+ mov edx,[iMinNP]
+ imul edx,edx,#1000
+
+ cmp eax,edx
+ jns _ExitMNP
+
+ mov eax,edx
+
+_ExitMNP:
+ movsxd  rdx,eax              // Original code
+ movsxd  rax,ecx              // Original code
+ jmp _BackMNP                 // Back to main code
+
+//=========================================
+align 10,cc
+//=========================================
+// Find Status Address
+// RBX = ppStructureAddress
+// EAX = ID
+// RDI = Result
+_FindStatusAddress:
+ push rcx
+ push rsi
+
+ xor rdi,rdi
+ mov rcx,rdi
+
+ mov ecx,[rbx+0c]
+ test rcx,rcx
+ jz _ExitFSA
+
+ mov rsi,[rbx]
+
+_FindSA0:
+ cmp eax,[rsi]
+ je _FindSA1
+ lea rsi,[rsi+00000008]
+ loop _FindSA0
+
+ jmp _ExitFSA
+//==
+_FindSA1:
+ mov rdi,rsi
+
+_ExitFSA:
+ pop rsi
+ pop rcx
+ ret
+
+//=========================================
+align 10,'='
+//=========================================
+ db '===============================&gt;'
+ db 'CE7.4 Script by Recifense 220302'
+//=========================================
+// Variables
+iEnableMMD:
+ dd 0
+iEnableFMP:
+ dd 0
+iEnableMMP:
+ dd 0
+iEnableMRP:
+ dd 0
+iEnableANM:
+ dd 0
+iEnableANT:
+ dd 0
+iEnableMER:
+ dd 0
+iEnableLEG:
+ dd 0
+iEnableMRR:
+ dd 0
+iEnableMAM:
+ dd 0
+iEnableRPC:
+ dd 0
+iEnableMCP:
+ dd 0
+iEnableBSP:
+ dd 0
+iEnableQOS:
+ dd 0
+iEnableGMD:
+ dd 0
+iEnableNNE:
+ dd 0
+iEnableMPG:
+ dd 0
+iEnableCHR:
+ dd 0
+iEnableCHC:
+ dd 0
+iEnableMMS:
+ dd 0
+iEnableMPD:
+ dd 0
+iEnableQEN:
+ dd 0
+iEnableMRC:
+ dd 0
+iEnableMNP:
+ dd 0
+iPlayerID:
+ dd #9999
+iMaxPower:
+ dd #999
+iCurDate:
+ dd 0
+iMinNP:
+ dd #300
+iAge:
+ dd #40
+iBornDate:
+ dd 0
+align 10,'p'
+pPlayer:
+ dq 0
+pProvince:
+ dq 0
+ dq 0
+pArmy:
+ dq 0
+pReligion:
+ dq 0
+pCulture:
+ dq 0
+pGame:
+ dq 0
+
+//=========================================
+// Hacking Points
+MHPR+01:
+pMHPR:
+ jmp _MonHumanPlayer
+ nop
+ nop
+_BackMHP:
+
+MPRS:
+ jmp _MonPlayerResources
+ nop
+ nop
+_BackMPR:
+
+MSPE:
+ jmp _MonSelProvince
+ nop
+_BackMSP:
+
+MSAY:
+ jmp _MonSelArmy
+ nop
+ nop
+ nop
+_BackMSA:
+
+MAMP:
+ jmp _MonArmyMP
+ nop
+ nop
+_BackMAM:
+
+MRPC:
+ jmp _MonRecProdConst
+ nop
+ nop
+ nop
+_BackMRP:
+
+MCPS:
+ jmp _MonColonizationProg
+ nop
+ nop
+ nop
+ nop
+ nop
+_BackMCP:
+
+MPGN:
+ jmp _MonProvinceGarrison
+ nop
+_BackMPG:
+
+MOCD:
+ jmp _MonCurDate
+ nop
+ nop
+ nop
+ nop
+_BackMCD:
+
+GMD1:
+ jmp _GodMode1
+ nop
+_BackGM1:
+
+GMD3:
+ jmp _GodMode3
+_BackGM3:
+
+GMD4:
+ jmp _GodMode4
+ nop
+ nop
+_BackGM4:
+
+GMD5:
+ jmp _GodMode5
+ nop
+ nop
+ nop
+_BackGM5:
+
+MOEN:
+ jmp _MonExploration
+ nop
+ nop
+ nop
+_BackMEN:
+
+MEN2:
+ jmp _MonExploration2
+ nop
+ nop
+_BackME2:
+
+MORC:
+ jmp _MonRelConv
+ nop
+ nop
+_BackMRC:
+
+MONP+0A:
+pMONP:
+ jmp _MonNationPoints
+ nop
+_BackMNP:
+
+//=========================================
+// Script for Restoring Original Codes
+[DISABLE]
+pMHPR:
+// cmp byte ptr [rcx+00001E5E],07
+ db 80 B9 5E 1E 00 00 07
+
+MPRS:
+// lea r15,[r14+00000260]
+ db 4D 8D BE 60 02 00 00
+
+MSPE:
+// mov eax,[rax+00000888]
+ db 8B 80 88 08 00 00
+
+MSAY:
+// mov rcx,[rax+38]
+// sub rcx,[rax+30]
+ db 48 8b 48 38 48 2b 48 30
+
+MAMP:
+// cmp [r14+00000130],edi
+ db 41 39 BE 30 01 00 00
+
+MRPC:
+// imul r11d,[rcx+28],000003E8
+ db 44 69 59 28 E8 03 00 00
+
+MCPS:
+// cmp [rcx+000003F0],000003E7
+ db 81 B9 F0 03 00 00 E7 03 00 00
+
+MPGN:
+// mov eax,[rax+000003F8]
+ db 8B 80 F8 03 00 00
+
+MOCD:
+// mov r8d,[rcx]
+// mov r9d,00000001
+ db 44 8b 01 41 b9 01 00 00 00
+
+GMD1:
+// mov eax,[rbx+34]
+// sub [rbx+28],eax
+ db 8B 43 34 29 43 28
+
+GMD3:
+// mov eax,[rsi]
+// sub [rdi+28],eax
+ db 8b 06 29 47 28
+
+GMD4:
+// mov eax,[rbx]
+// mov rbx,[rsp+38]
+ db 8B 03 48 8B 5C 24 38
+
+GMD5:
+// mov [rdi+2C],eax
+// mov rbx,[rsp+60]
+ db 89 47 2c 48 8b 5c 24 60
+
+MOEN:
+// cmp [r15+2C],000186A0
+ db 41 81 7f 2c a0 86 01 00
+
+MEN2:
+// cmp [rsi+2C],000186A0
+ db 81 7e 2c a0 86 01 00
+
+MORC:
+// add [r8+0000088C],eax
+ db 41 01 80 8C 08 00 00
+
+pMONP:
+// movsxd  rdx,eax
+// movsxd  rax,ecx
+ db 48 63 D0 48 63 C1
+
+//=========================================
+// Unregistering Symbols
+unregistersymbol(MyCode)
+unregistersymbol(iEnableMMD)
+unregistersymbol(iEnableFMP)
+unregistersymbol(iEnableMMP)
+unregistersymbol(iEnableMRP)
+unregistersymbol(iEnableANM)
+unregistersymbol(iEnableANT)
+unregistersymbol(iEnableMER)
+unregistersymbol(iEnableLEG)
+unregistersymbol(iEnableMRR)
+unregistersymbol(iEnableMAM)
+unregistersymbol(iEnableRPC)
+unregistersymbol(iEnableMCP)
+unregistersymbol(iEnableBSP)
+unregistersymbol(iEnableQOS)
+unregistersymbol(iEnableGMD)
+unregistersymbol(iEnableNNE)
+unregistersymbol(iEnableMPG)
+unregistersymbol(iEnableCHR)
+unregistersymbol(iEnableCHC)
+unregistersymbol(iEnableMMS)
+unregistersymbol(iEnableMMS)
+unregistersymbol(iEnableMPD)
+unregistersymbol(iEnableQEN)
+unregistersymbol(iEnableMRC)
+unregistersymbol(iEnableMNP)
+
+unregistersymbol(iPlayerID)
+unregistersymbol(iCurDate)
+unregistersymbol(iAge)
+unregistersymbol(iBornDate)
+unregistersymbol(iMinNP)
+
+unregistersymbol(pPlayer)
+unregistersymbol(pProvince)
+unregistersymbol(pArmy)
+unregistersymbol(pReligion)
+unregistersymbol(pCulture)
+unregistersymbol(pGame)
+
+unregistersymbol(pMHPR)
+unregistersymbol(MPRS)
+unregistersymbol(MSPE)
+unregistersymbol(MSAY)
+
+unregistersymbol(MAMP)
+unregistersymbol(MRPC)
+unregistersymbol(MCPS)
+unregistersymbol(MPGN)
+unregistersymbol(MOCD)
+
+unregistersymbol(GMD1)
+unregistersymbol(GMD3)
+unregistersymbol(GMD4)
+unregistersymbol(GMD5)
+
+unregistersymbol(MOEN)
+unregistersymbol(MEN2)
+unregistersymbol(MORC)
+
+unregistersymbol(pMONP)
+
+//=========================================
+dealloc(MyCode)
+//============= Scripts End ===============
+
+// ****************************************
+// NOTES
+// ****************************************
+{
+}
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>559</ID>
+          <Description>"[X] &lt;== Minimum Money (Ducats)"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMMD",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMMD",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>560</ID>
+          <Description>"[X] &lt;== Full Manpower (and Sailors)"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableFMP",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableFMP",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>561</ID>
+          <Description>"[X] &lt;== Minimum Prestige"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMMP",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMMP",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>562</ID>
+          <Description>"[X] &lt;== Minimum Research Powers"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMRP",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMRP",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>563</ID>
+          <Description>"[X] &lt;== Minimum Army/Navy Tradition"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableANT",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableANT",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>564</ID>
+          <Description>"[X] &lt;== Minimum Mercantilism"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMER",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMER",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>565</ID>
+          <Description>"[X] &lt;== Minimum Legitimacy"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableLEG",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableLEG",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>566</ID>
+          <Description>"[X] &lt;== No Decay Modifiers"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMPD",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMPD",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>567</ID>
+          <Description>"[X] &lt;== Minimum Stability"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMMS",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMMS",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>568</ID>
+          <Description>"[X] &lt;== Blessed Province (Trade Power/Manpower Bonus/Base Production/Base Tax)"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableBSP",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableBSP",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>569</ID>
+          <Description>"[X] &lt;== Full Garrison"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMPG",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMPG",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>571</ID>
+          <Description>"[X] &lt;== Recruitment/Production/Construction in 1 Day"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableRPC",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableRPC",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>572</ID>
+          <Description>"[X] &lt;== Colonization in a Month"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMCP",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMCP",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>573</ID>
+          <Description>"[X] &lt;== No Natives"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableNNE",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableNNE",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>574</ID>
+          <Description>"[X] &lt;== Army/Fleet Move in 1 Day to Adjacent Region"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMAM",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMAM",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>575</ID>
+          <Description>"[X] &lt;== Quick Exploration"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableQEN",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableQEN",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>576</ID>
+          <Description>"[X] &lt;== God Mode"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableGMD",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableGMD",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>577</ID>
+          <Description>"[X] &lt;== Religion Conversion in 1 Day"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMRC",1)
+memrec.Color = 0x00004000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMRC",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>570</ID>
+          <Description>"[X] &lt;== Quick Province Ownership"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableQOS",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableQOS",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>202</ID>
+          <Description>"[X] &lt;== Minimum Nation Design Points"</Description>
+          <Options moHideChildren="1"/>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableMNP",1)
+getAddressList().getMemoryRecordByID(202).Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableMNP",0)
+getAddressList().getMemoryRecordByID(202).Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>203</ID>
+              <Description>"Minimum Nation Design Points Value =====&gt;"</Description>
+              <Color>0080FF</Color>
+              <VariableType>4 Bytes</VariableType>
+              <Address>iMinNP</Address>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>578</ID>
+          <Description>"[X] &lt;== Change Culture"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableCHC",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableCHC",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>579</ID>
+          <Description>"[X] &lt;== Change Religion"</Description>
+          <Color>C08000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+writeInteger("iEnableCHR",1)
+memrec.Color = 0x00008000
+{$ASM}
+
+[disable]
+{$LUA}
+writeInteger("iEnableCHR",0)
+memrec.Color = 0x00c08000
+{$ASM}
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>314</ID>
+          <Description>"[X] &lt;========================  Default Pointers"</Description>
+          <Options moHideChildren="1" moDeactivateChildrenAsWell="1"/>
+          <Color>FF80FF</Color>
+          <GroupHeader>1</GroupHeader>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>204</ID>
+              <Description>"[X] &lt;===== Ruler Info"</Description>
+              <Options moHideChildren="1"/>
+              <Color>404080</Color>
+              <GroupHeader>1</GroupHeader>
+              <CheatEntries>
+                <CheatEntry>
+                  <ID>205</ID>
+                  <Description>"Name"</Description>
+                  <ShowAsHex>1</ShowAsHex>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>0000FF</Color>
+                  <VariableType>Array of byte</VariableType>
+                  <ByteLength>16</ByteLength>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>28</Offset>
+                    <Offset>1210</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>150</ID>
+                  <Description>"Administrative Skill ==&gt; (x1)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>48</Offset>
+                    <Offset>1210</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>151</ID>
+                  <Description>"Diplomatic Skill ==&gt; (x1)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>4C</Offset>
+                    <Offset>1210</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>152</ID>
+                  <Description>"Military Skill ==&gt; (x1)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>50</Offset>
+                    <Offset>1210</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>259</ID>
+                  <Description>"Current Legitimacy (x1000)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>1058</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>208</ID>
+                  <Description>"Current Born Date ==&gt;"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>70</Offset>
+                    <Offset>1210</Offset>
+                  </Offsets>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>179</ID>
+                      <Description>"Enter desired Age ===&gt;"</Description>
+                      <Color>0080FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>iAge</Address>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>181</ID>
+                      <Description>"New Born Date (copy it and paste on Current Born Date)"</Description>
+                      <Color>0000FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>iBornDate</Address>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+              </CheatEntries>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>206</ID>
+              <Description>"[X] &lt;===== Player Info"</Description>
+              <Options moHideChildren="1"/>
+              <Color>404080</Color>
+              <GroupHeader>1</GroupHeader>
+              <CheatEntries>
+                <CheatEntry>
+                  <ID>207</ID>
+                  <Description>"Country Name (abbreviation)"</Description>
+                  <Color>0000FF</Color>
+                  <VariableType>String</VariableType>
+                  <Length>16</Length>
+                  <Unicode>0</Unicode>
+                  <CodePage>0</CodePage>
+                  <ZeroTerminate>1</ZeroTerminate>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>20</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>153</ID>
+                  <Description>"Current Administrative Power ==&gt; (x1)"</Description>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>260</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>154</ID>
+                  <Description>"Current Diplomatic Power ==&gt; (x1)"</Description>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>264</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>155</ID>
+                  <Description>"Current Military Power ==&gt; (x1)"</Description>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>268</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>156</ID>
+                  <Description>"Current Money (Ducats) ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>1</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>B78</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>404</ID>
+                  <Description>"Current Inflation ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>1</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>B9C</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>263</ID>
+                  <Description>"Current Stability ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>1</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>BA0</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>230</ID>
+                  <Description>"Current Prestige ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>1</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>CC0</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>157</ID>
+                  <Description>"Current Army Tradition ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>E04</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>158</ID>
+                  <Description>"Current Navy Tradition ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>E08</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>387</ID>
+                  <Description>"Current Mercantilism (x1000)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>1060</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>410</ID>
+                  <Description>"Current Republican Tradition (x10)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>105C</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>163</ID>
+                  <Description>"Current Papal Influence ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF00FF</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pPlayer</Address>
+                  <Offsets>
+                    <Offset>F18</Offset>
+                  </Offsets>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>584</ID>
+                  <Description>"Imperial Authority ==&gt; (x1000)"</Description>
+                  <ShowAsSigned>0</ShowAsSigned>
+                  <Color>FF8080</Color>
+                  <VariableType>4 Bytes</VariableType>
+                  <Address>pGame</Address>
+                  <Offsets>
+                    <Offset>15E8</Offset>
+                  </Offsets>
+                </CheatEntry>
+              </CheatEntries>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>209</ID>
+              <Description>"[X] &lt;===== Advisors Info"</Description>
+              <Options moHideChildren="1"/>
+              <Color>404080</Color>
+              <GroupHeader>1</GroupHeader>
+              <CheatEntries>
+                <CheatEntry>
+                  <ID>219</ID>
+                  <Description>"Administrative"</Description>
+                  <Color>FF0080</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>210</ID>
+                      <Description>"Name (Size bigger than 15)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>String</VariableType>
+                      <Length>32</Length>
+                      <Unicode>0</Unicode>
+                      <CodePage>0</CodePage>
+                      <ZeroTerminate>1</ZeroTerminate>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>0</Offset>
+                        <Offset>20</Offset>
+                        <Offset>1570</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>218</ID>
+                      <Description>"Name (Size smaller than 16)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>20</Offset>
+                        <Offset>1570</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>211</ID>
+                      <Description>"Main Skill ==&gt; (x1)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>40</Offset>
+                        <Offset>1570</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>220</ID>
+                  <Description>"Diplomatic"</Description>
+                  <Color>FF0080</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>260</ID>
+                      <Description>"Name (Size bigger than 15)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>String</VariableType>
+                      <Length>32</Length>
+                      <Unicode>0</Unicode>
+                      <CodePage>0</CodePage>
+                      <ZeroTerminate>1</ZeroTerminate>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>0</Offset>
+                        <Offset>20</Offset>
+                        <Offset>1578</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>261</ID>
+                      <Description>"Name (Size smaller than 16)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>20</Offset>
+                        <Offset>1578</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>223</ID>
+                      <Description>"Main Skill ==&gt; (x1)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>40</Offset>
+                        <Offset>1578</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>224</ID>
+                  <Description>"Military"</Description>
+                  <Color>FF0080</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>225</ID>
+                      <Description>"Name (Size bigger than 15)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>String</VariableType>
+                      <Length>32</Length>
+                      <Unicode>0</Unicode>
+                      <CodePage>0</CodePage>
+                      <ZeroTerminate>1</ZeroTerminate>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>0</Offset>
+                        <Offset>20</Offset>
+                        <Offset>1580</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>226</ID>
+                      <Description>"Name (Size smaller than 16)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>20</Offset>
+                        <Offset>1580</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>227</ID>
+                      <Description>"Main Skill ==&gt; (x1)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pPlayer</Address>
+                      <Offsets>
+                        <Offset>40</Offset>
+                        <Offset>1580</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+              </CheatEntries>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>286</ID>
+              <Description>"[X] &lt;===== Province Info"</Description>
+              <Options moHideChildren="1" moDeactivateChildrenAsWell="1"/>
+              <Color>404080</Color>
+              <GroupHeader>1</GroupHeader>
+              <CheatEntries>
+                <CheatEntry>
+                  <ID>295</ID>
+                  <Description>"[X] &lt;===== Current Selected Province"</Description>
+                  <Options moHideChildren="1"/>
+                  <Color>0000FF</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>338</ID>
+                      <Description>"Name (as Array of byte)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>388</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>288</ID>
+                      <Description>"Manpower Bonus ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>3D8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>296</ID>
+                      <Description>"Base Tax Value ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>3DC</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>297</ID>
+                      <Description>"Base Production ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>3E0</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>469</ID>
+                      <Description>"Current Autonomy ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>420</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>470</ID>
+                      <Description>"Current Devastation ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>424</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>289</ID>
+                      <Description>"Culture 01 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>428</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>301</ID>
+                          <Description>"Culture Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince</Address>
+                          <Offsets>
+                            <Offset>68</Offset>
+                            <Offset>428</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>339</ID>
+                      <Description>"Culture 02 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>430</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>340</ID>
+                          <Description>"Culture Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince</Address>
+                          <Offsets>
+                            <Offset>68</Offset>
+                            <Offset>430</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>438</ID>
+                      <Description>"Culture 03 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>438</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>439</ID>
+                          <Description>"Culture Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince</Address>
+                          <Offsets>
+                            <Offset>68</Offset>
+                            <Offset>438</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>298</ID>
+                      <Description>"Religion 01 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>440</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>302</ID>
+                          <Description>"Production Item Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince</Address>
+                          <Offsets>
+                            <Offset>b0</Offset>
+                            <Offset>440</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>341</ID>
+                      <Description>"Religion 02 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>448</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>342</ID>
+                          <Description>"Production Item Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince</Address>
+                          <Offsets>
+                            <Offset>b0</Offset>
+                            <Offset>448</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>299</ID>
+                      <Description>"Production Item ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince</Address>
+                      <Offsets>
+                        <Offset>450</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>300</ID>
+                          <Description>"Production Item Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince</Address>
+                          <Offsets>
+                            <Offset>18</Offset>
+                            <Offset>450</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>417</ID>
+                  <Description>"[X] &lt;===== Previous Selected Province"</Description>
+                  <Options moHideChildren="1"/>
+                  <Color>0000FF</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>440</ID>
+                      <Description>"Name (as Array of byte)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>388</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>441</ID>
+                      <Description>"Manpower Bonus ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>3D8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>442</ID>
+                      <Description>"Base Tax Value ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>3DC</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>443</ID>
+                      <Description>"Base Production ==&gt; (x1000)"</Description>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>3E0</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>444</ID>
+                      <Description>"Culture 01 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>428</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>445</ID>
+                          <Description>"Culture Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince+08</Address>
+                          <Offsets>
+                            <Offset>68</Offset>
+                            <Offset>428</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>446</ID>
+                      <Description>"Culture 02 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>430</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>447</ID>
+                          <Description>"Culture Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince+08</Address>
+                          <Offsets>
+                            <Offset>68</Offset>
+                            <Offset>430</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>448</ID>
+                      <Description>"Culture 03 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>438</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>449</ID>
+                          <Description>"Culture Name (as Array of byte)"</Description>
+                          <ShowAsHex>1</ShowAsHex>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>Array of byte</VariableType>
+                          <ByteLength>16</ByteLength>
+                          <Address>pProvince+08</Address>
+                          <Offsets>
+                            <Offset>68</Offset>
+                            <Offset>438</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>450</ID>
+                      <Description>"Religion 01 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>440</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>451</ID>
+                          <Description>"Production Item Name (DO NOT CHANGE THIS)"</Description>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>String</VariableType>
+                          <Length>16</Length>
+                          <Unicode>0</Unicode>
+                          <CodePage>0</CodePage>
+                          <ZeroTerminate>1</ZeroTerminate>
+                          <Address>pProvince+08</Address>
+                          <Offsets>
+                            <Offset>b0</Offset>
+                            <Offset>440</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>452</ID>
+                      <Description>"Religion 02 ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>448</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>453</ID>
+                          <Description>"Production Item Name (DO NOT CHANGE THIS)"</Description>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>String</VariableType>
+                          <Length>16</Length>
+                          <Unicode>0</Unicode>
+                          <CodePage>0</CodePage>
+                          <ZeroTerminate>1</ZeroTerminate>
+                          <Address>pProvince+08</Address>
+                          <Offsets>
+                            <Offset>b0</Offset>
+                            <Offset>448</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>454</ID>
+                      <Description>"Production Item ==&gt;"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>8 Bytes</VariableType>
+                      <Address>pProvince+08</Address>
+                      <Offsets>
+                        <Offset>450</Offset>
+                      </Offsets>
+                      <CheatEntries>
+                        <CheatEntry>
+                          <ID>455</ID>
+                          <Description>"Production Item Name (DO NOT CHANGE THIS)"</Description>
+                          <ShowAsSigned>0</ShowAsSigned>
+                          <Color>0080FF</Color>
+                          <VariableType>String</VariableType>
+                          <Length>16</Length>
+                          <Unicode>0</Unicode>
+                          <CodePage>0</CodePage>
+                          <ZeroTerminate>1</ZeroTerminate>
+                          <Address>pProvince+08</Address>
+                          <Offsets>
+                            <Offset>18</Offset>
+                            <Offset>450</Offset>
+                          </Offsets>
+                        </CheatEntry>
+                      </CheatEntries>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+              </CheatEntries>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>348</ID>
+              <Description>"[X] &lt;===== Last Selected Army/Fleet Info"</Description>
+              <Options moHideChildren="1" moDeactivateChildrenAsWell="1"/>
+              <Color>404080</Color>
+              <GroupHeader>1</GroupHeader>
+              <CheatEntries>
+                <CheatEntry>
+                  <ID>349</ID>
+                  <Description>"[X] &lt;============== Officer Info"</Description>
+                  <Options moHideChildren="1"/>
+                  <Color>0000FF</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>350</ID>
+                      <Description>"Name (DO NOT CHANGE THIS)"</Description>
+                      <Color>0000FF</Color>
+                      <VariableType>String</VariableType>
+                      <Length>32</Length>
+                      <Unicode>0</Unicode>
+                      <CodePage>0</CodePage>
+                      <ZeroTerminate>1</ZeroTerminate>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>0</Offset>
+                        <Offset>20</Offset>
+                        <Offset>d8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>351</ID>
+                      <Description>"Name (as Array of byte)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>20</Offset>
+                        <Offset>d8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>457</ID>
+                      <Description>"Siege Skill ==&gt; (x1)"</Description>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>44</Offset>
+                        <Offset>d8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>465</ID>
+                      <Description>"Shock Skill ==&gt; (x1)"</Description>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>48</Offset>
+                        <Offset>d8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>466</ID>
+                      <Description>"Fire Skill ==&gt; (x1)"</Description>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>4c</Offset>
+                        <Offset>d8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>467</ID>
+                      <Description>"Maneuver Skill ==&gt; (x1)"</Description>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>50</Offset>
+                        <Offset>d8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+                <CheatEntry>
+                  <ID>460</ID>
+                  <Description>"[X] &lt;============== Siege Info"</Description>
+                  <Options moHideChildren="1"/>
+                  <Color>0000FF</Color>
+                  <GroupHeader>1</GroupHeader>
+                  <CheatEntries>
+                    <CheatEntry>
+                      <ID>461</ID>
+                      <Description>"Name (DO NOT CHANGE THIS)"</Description>
+                      <Color>0000FF</Color>
+                      <VariableType>String</VariableType>
+                      <Length>16</Length>
+                      <Unicode>0</Unicode>
+                      <CodePage>0</CodePage>
+                      <ZeroTerminate>1</ZeroTerminate>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>0</Offset>
+                        <Offset>148</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>462</ID>
+                      <Description>"Name (as Array of byte)"</Description>
+                      <ShowAsHex>1</ShowAsHex>
+                      <ShowAsSigned>0</ShowAsSigned>
+                      <Color>0000FF</Color>
+                      <VariableType>Array of byte</VariableType>
+                      <ByteLength>16</ByteLength>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>148</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>463</ID>
+                      <Description>"Siege Current Phase # Days ==&gt;"</Description>
+                      <ShowAsSigned>1</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>38</Offset>
+                        <Offset>c8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                    <CheatEntry>
+                      <ID>464</ID>
+                      <Description>"Siege Current DieRoll ==&gt;"</Description>
+                      <ShowAsSigned>1</ShowAsSigned>
+                      <Color>FF00FF</Color>
+                      <VariableType>4 Bytes</VariableType>
+                      <Address>pArmy</Address>
+                      <Offsets>
+                        <Offset>98</Offset>
+                        <Offset>c8</Offset>
+                      </Offsets>
+                    </CheatEntry>
+                  </CheatEntries>
+                </CheatEntry>
+              </CheatEntries>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>228</ID>
+      <Description>"[X] &lt;== Table/Script Information"</Description>
+      <Options moHideChildren="1"/>
+      <Color>0000FF</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[enable]
+define(test,LUDO)
+
+{$LUA}
+getMainForm().CommentButton.doClick()
+{$ASM}
+
+[disable]
+
+</AssemblerScript>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols>
+    <SymbolEntry>
+      <Name>Recifense</Name>
+      <Address>20211111</Address>
+    </SymbolEntry>
+  </UserdefinedSymbols>
+  <Comments>===========================================
+ Game Title    : Europa Universalis IV (64Bits)
+ Game Version  : 1.33.2.0 (108e) (X64)
+ Game Sponsor  : Vodos (game) + darkedone02 (DLC) + PF (DLCs)
+ Process Name  : eu4.exe
+ Relevant Info : 64bits/TBS
+ Script Version: 10.2 (x64)
+ CE Version    : 7.4
+ Release date  : 02-Mar-2022
+ Author        : Recifense
+ Revise date   : 29-Aug-2022
+ Revisor       : Wujidadi
+ History:
+ 21-Sep-2019: First Release for 64bits version 1.29.1.0.
+ 09-Dec-2019: Release for version 1.29.3.0.+ New feature
+ 10-Jun-2020: Release for version 1.30.1.0 (Emperor)
+ 11-Jun-2020: Fix for Army/Navy tradition (S9.3)
+ 12-Jun-2020: Fix for changing Religion/Culture (S9.4)
+ 16-Feb-2021: Release for version 1.30.5.0 (S9.5)
+ 27-Apr-2021: Release for version 1.31.0.0 (S9.6)
+ 28-Apr-2021: Release for version 1.31.1.0 (S9.7)
+ 03-May-2021: Release for version 1.31.2.0 (S9.8)
+ 10-Jul-2021: Release for version 1.31.5.2 (S9.9)
+ 07-Sep-2021: New feature: Minimum Nation Design Points (S10.0)
+ 11-Nov-2021: Release for version 1.33.0.0 (S10.1)
+ 02-Mar-2022: Release for version 1.33.2.0 (S10.2)
+ 29-Aug-2022: Tiny revise for names from String to Array of byte
+ Features:
+ - Minimum Ducats                  [1]
+ - Full Manpower                   [2]
+ - Minimum Stability 
+ - Minimum Prestige                [3]
+ - Minimum Power:                  [4]
+   - Administrative
+   - Diplomatic
+   - Military
+ - Minimum Army/Navy Tradition     [6]
+ - Minimum Mercantilism            [7]
+ - Minimum Legitimacy              [8]
+ - Move to adjacent area in 1 turn [A]
+ - Tasks in 1 turn:                [B]
+   - Recruitment
+   - Production
+   - Construction
+   - Culture
+   - Make Core
+ - Colonization in 1 turn          [C] (**)
+ - Blessed Province:               [D] (*)
+   - Minimum Trade Power
+   - Minimum ManPower Bonus
+ - Quick Province Ownership        [E] (*)
+ - God Mode:                       [F]
+   - Army
+   - Fleet
+   - Garrison (Province)
+   - Assault
+   - Attrition     
+ - No Native                       [G] (*)
+ - Full Garrison                   [H] (*)
+ - Change Religion                 [I] (*)
+ - Change Culture                  [J] (*)
+ - No Decay                        [K] 
+ - Quick Exploration (new)         [M]
+ - Religion Conversion in 1 Day    [N] (new)(s9.1)
+ - Minimum Nation Design Points    [O] (new)(s10.0)
+ - pointers
+===========================================
+[1] It will not go under 70000;
+[2] That's it;
+[3] It will not go under 90;
+[4] It will not go under Maximum-4;
+[6] It will not go under 67;
+[7] It will not go under 30%;
+[8] It will not go under 90%;
+[A] Army and Fleet;
+[B] That's it;
+[C] That's it;
+[D] Global Trade power will not go under 50 ...
+... and Manpower will not go under 5000;
+[E] Conquer the province and it will be yours;
+[F] That's it;
+[G] That's it;
+[H] It will be set to full capacity;
+[I] It will be set to player's main religion;
+[J] It will be set to player's main culture;
+[K] No decay for Human player;
+[L] Minimum value is 400;
+[M] Region Exploration in 1 Turn;
+[N] That's it. Just send a Missionary to your province;
+[O] That's it. You can change the minimum value;
+(*) The province should be selected in order to work;
+(**)It will only change into a province when the month changes;
+===========================================
+[USAGE]
+1) Run CE70 or greater;
+2) Run Game;
+3) Load the game process "eu4.exe" in CE;
+4) Load this table and activate the main script;
+5) Now Activate the script of each cheat you want to use;
+6) Game On;
+===========================================
+HOTKEYS:
+None pre-defined
+===========================================
+[IMPORTANT]
+Save your game before unsing the cheats.
+===========================================
+[INFO]
+Tested on Win 10 64bits
+===========================================
+Cheers!
+</Comments>
+</CheatTable>
