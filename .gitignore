@@ -1,0 +1,140 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.atom/
+.buildlog/
+.history
+.svn/
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# Temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Composer
+vendor/
+
+# Node.js
+node_modules/
+
+# Laravel
+/Volumes/Main/public/build
+/Volumes/Main/public/hot
+/Volumes/Main/public/uploads
+/Volumes/Main/public/storage
+/Volumes/Main/storage/*.key
+/Volumes/Main/bootstrap/compiled.php
+/Volumes/Main/app/storage
+.env.backup
+.env.testing
+.phpunit.result.cache
+Homestead.yaml
+Homestead.json
+auth.json
+npm-debug.log
+yarn-error.log
+.vagrant
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+.idea_modules/
+out/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Visual Studio Code
+.[vV][sS][cC][oO][dD][eE]*
+
+# Sublime Text
+*.sublime-workspace
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+sftp-config.json
+Package Control.last-run
+Package Control.ca-list
+Package Control.ca-bundle
+Package Control.system-ca-bundle
+Package Control.cache/
+Package Control.ca-certs/
+Package Control.merged-ca-bundle
+Package Control.user-ca-bundle
+oscrypto-ca-bundle.crt
+bh_unicode_properties.cache
+GitHub.sublime-settings
+
+# Dreamweaver
+_notes
+_compareTemp
+configs/
+dwsync.xml
+dw_php_codehinting.config
+*.mno
+
+# Shared
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
+/Volumes/Main/public/docs
+/Volumes/Main/resources/docs
+/Volumes/Main/docs
+/Volumes/Main/.scribe
+
+# This project
