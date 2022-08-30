@@ -2,8 +2,6 @@
 
 require_once './EU4EncodingConverter.php';
 
-header('Content-Type: text/plain; charset=UTF-8');
-
 $str = '';
 $whitespace = false;
 
@@ -45,6 +43,7 @@ switch (true) {
         break;
     # 瀏覽器 URL 帶 GET 參數
     case (isset($_GET['s'])):
+        header('Content-Type: text/plain; charset=UTF-8');
         $str = $_GET['s'];
         if (isset($_GET['space']) && !in_array(strtolower($_GET['space']), ['false', '0', 'null', 'no', 'none'])) {
             $whitespace = true;
@@ -55,4 +54,4 @@ switch (true) {
         exit(0);
 }
 
-echo EU4EncodingConverter::getInstance()->getHex($str, $whitespace);
+echo EU4EncodingConverter::getInstance()->encode($str, $whitespace)->get();
